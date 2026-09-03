@@ -3,23 +3,29 @@ import Mathlib
 /-!
 # Characteristic-two anisotropicity of simplicial spheres
 
-This file states that every positive-dimensional simplicial sphere is
-generically anisotropic over every field of characteristic two.
--/
+This file states Theorem 3.3 of
+[Papadakis--Petrotou](https://arxiv.org/abs/2012.09815), using their Definitions
+2.2 and 3.2.  In the paper's notation:
 
-section
+* `CoefficientPolynomial k₁ n m` is `k₁[aᵢⱼ]`;
+* `GenericField k₁ n m` is its fraction field `k`;
+* `genericLinearForm k₁ i` is `fᵢ = ∑ⱼ aᵢⱼ xⱼ`;
+* `GenericArtinianReduction k₁ D` is
+  `A = k[x₁, ..., xₘ]/(I_D + (f₁, ..., fₙ₊₁))`; and
+* `GenericallyAnisotropic k₁ D n` says that every nonzero `u ∈ Aⱼ` with
+  `1 ≤ 2j ≤ n + 1` has `u² ≠ 0`.
 
-/-!
-# The generic Artinian reduction of a simplicial complex
+Vertices are indexed by `Fin m`, the zero-based form of `{1, ..., m}`.
+Mathlib's `AbstractSimplicialComplex` contains every singleton but stores only
+nonempty faces; the explicit nonemptiness condition in `stanleyReisnerIdeal`
+therefore treats the conventional empty face correctly.
 
-This file fixes the objects occurring in Definitions 2.2 and 3.2 of
-Papadakis--Petrotou.  Vertices are indexed by `Fin m`; this is only the
-zero-based version of the paper's vertex set `{1, ..., m}`.
-
-The grading on a quotient is represented extensionally: a quotient class is
-homogeneous of degree `j` when it has a homogeneous polynomial representative
-of degree `j`.  Once homogeneity of the defining ideal has been developed,
-this agrees with membership in the degree-`j` graded component.
+The paper allows any geometric realization of `D`.  Here we choose the
+canonical barycentric realization in the standard simplex.  The quotient
+component `Aⱼ` is represented extensionally by a homogeneous degree-`j`
+polynomial.  The solution proves that the defining ideal is homogeneous and
+identifies this predicate with the image of Mathlib's degree-`j` homogeneous
+submodule.
 -/
 
 noncomputable section
@@ -135,22 +141,8 @@ def GenericallyAnisotropic {m : ℕ} (D : AbstractSimplicialComplex (Fin m))
 
 end Reduction
 
-end SimplicialSphereAnisotropicity
-
-end
-
-end
-
-section
-
-/-!
-# The theorem statement
--/
-
-namespace SimplicialSphereAnisotropicity
-
-/-- Characteristic-two generic anisotropicity of a positive-dimensional
-simplicial sphere. -/
+/-- Papadakis--Petrotou, Theorem 3.3: characteristic-two generic
+anisotropicity of every positive-dimensional simplicial sphere. -/
 theorem characteristic_two_anisotropicity
     (k₁ : Type*) [Field k₁] [CharP k₁ 2]
     {n m : ℕ} (hn : 1 ≤ n)
@@ -159,6 +151,5 @@ theorem characteristic_two_anisotropicity
   sorry
 
 end SimplicialSphereAnisotropicity
-
 
 end

@@ -5,23 +5,29 @@ set_option synthInstance.maxHeartbeats 200000
 /-!
 # Characteristic-two anisotropicity of simplicial spheres
 
-This file proves that every positive-dimensional simplicial sphere is
-generically anisotropic over every field of characteristic two.
--/
+This file proves Theorem 3.3 of
+[Papadakis--Petrotou](https://arxiv.org/abs/2012.09815), using their Definitions
+2.2 and 3.2.  In the paper's notation:
 
-section
+* `CoefficientPolynomial k₁ n m` is `k₁[aᵢⱼ]`;
+* `GenericField k₁ n m` is its fraction field `k`;
+* `genericLinearForm k₁ i` is `fᵢ = ∑ⱼ aᵢⱼ xⱼ`;
+* `GenericArtinianReduction k₁ D` is
+  `A = k[x₁, ..., xₘ]/(I_D + (f₁, ..., fₙ₊₁))`; and
+* `GenericallyAnisotropic k₁ D n` says that every nonzero `u ∈ Aⱼ` with
+  `1 ≤ 2j ≤ n + 1` has `u² ≠ 0`.
 
-/-!
-# The generic Artinian reduction of a simplicial complex
+Vertices are indexed by `Fin m`, the zero-based form of `{1, ..., m}`.
+Mathlib's `AbstractSimplicialComplex` contains every singleton but stores only
+nonempty faces; the explicit nonemptiness condition in `stanleyReisnerIdeal`
+therefore treats the conventional empty face correctly.
 
-This file fixes the objects occurring in Definitions 2.2 and 3.2 of
-Papadakis--Petrotou.  Vertices are indexed by `Fin m`; this is only the
-zero-based version of the paper's vertex set `{1, ..., m}`.
-
-The grading on a quotient is represented extensionally: a quotient class is
-homogeneous of degree `j` when it has a homogeneous polynomial representative
-of degree `j`.  Once homogeneity of the defining ideal has been developed,
-this agrees with membership in the degree-`j` graded component.
+The paper allows any geometric realization of `D`.  Here we choose the
+canonical barycentric realization in the standard simplex.  The quotient
+component `Aⱼ` is represented extensionally by a homogeneous degree-`j`
+polynomial.  Below, `genericReductionIdeal_isHomogeneous` proves that the
+defining ideal is homogeneous, and `mem_quotientDegree_iff` identifies this
+predicate with the image of Mathlib's degree-`j` homogeneous submodule.
 -/
 
 noncomputable section
@@ -138,8 +144,6 @@ def GenericallyAnisotropic {m : ℕ} (D : AbstractSimplicialComplex (Fin m))
 end Reduction
 
 end SimplicialSphereAnisotropicity
-
-end
 
 end
 
@@ -537,11 +541,15 @@ end
 section
 
 /-!
-# Trusted algebra facade
+# Machine-checked bridges for the paper-defined quotient
 
-This module records elementary bridges to the exact objects in
-`SimplicialSphereAnisotropicity.Definitions`.  It introduces no alternate quotient and no mathematical
-hypothesis used by the final theorem.
+This section connects the definitions in the public theorem statement to
+Mathlib's homogeneous submodules and ideal quotients.  In particular,
+`mem_quotientDegree_iff` identifies the paper's `Aⱼ` with
+`IsHomogeneousClass`, while `genericReductionIdeal_isHomogeneous` verifies
+that the Stanley--Reisner and generic-parameter quotient carries the intended
+grading.  No alternate quotient or additional mathematical hypothesis is
+introduced.
 -/
 
 noncomputable section
@@ -567,8 +575,8 @@ abbrev Reduction (k : Type*) [Field k] {n m : ℕ}
 
 attribute [local instance] MvPolynomial.gradedAlgebra
 
-/-- The image of the degree-`j` homogeneous subspace in the exact trusted
-quotient. -/
+/-- The image of Mathlib's degree-`j` homogeneous polynomial submodule in the
+paper-defined quotient `A`. -/
 noncomputable def quotientDegree
     (k : Type*) [Field k] {n m : ℕ}
     (D : AbstractSimplicialComplex (Fin m)) (j : ℕ) :
@@ -594,8 +602,8 @@ noncomputable instance quotientDegree_finiteDimensional
         (SimplicialSphereAnisotropicity.genericReductionIdeal k D)).toLinearMap)
   exact Module.Finite.map _ _
 
-/-- The facade degree subspace is exactly the trusted existential notion of a
-homogeneous quotient class. -/
+/-- Membership in the degree subspace is exactly the public existential notion
+of a homogeneous quotient class. -/
 theorem mem_quotientDegree_iff
     (k : Type*) [Field k] {n m : ℕ}
     (D : AbstractSimplicialComplex (Fin m)) (j : ℕ)
@@ -653,8 +661,8 @@ theorem genericReductionIdeal_isHomogeneous
   · exact stanleyReisnerIdeal_isHomogeneous (CoeffField k n m) D
   · exact genericParameterIdeal_isHomogeneous k n m
 
-/-- The trusted quotient statement is exactly homogeneous ideal-membership
-anisotropy on representatives. -/
+/-- The public quotient statement is exactly homogeneous ideal-membership
+anisotropy on polynomial representatives. -/
 theorem genericallyAnisotropic_iff_representatives
     (k : Type*) [Field k] {n m : ℕ}
     (D : AbstractSimplicialComplex (Fin m)) :
@@ -8114,6 +8122,8 @@ open SimplicialSphereAnisotropicity.Simplicial
 
 namespace SimplicialSphereAnisotropicity.Topology
 
+/-! ## Machine-checked realization bridge -/
+
 /-- Barycentric realization for a pre-simplicial complex. -/
 def preGeom {m : ℕ} (C : PreAbstractSimplicialComplex (Fin m)) :
     Set (Fin m → ℝ) :=
@@ -8123,6 +8133,8 @@ def preGeom {m : ℕ} (C : PreAbstractSimplicialComplex (Fin m)) :
 abbrev preGeomTop {m : ℕ} (C : PreAbstractSimplicialComplex (Fin m)) :=
   TopCat.of (preGeom C)
 
+/-- The realization used throughout the proof is definitionally the canonical
+barycentric realization appearing in the public sphere predicate. -/
 theorem preGeom_toPre_eq_geometricRealization {m : ℕ}
     (D : AbstractSimplicialComplex (Fin m)) :
     preGeom D.toPreAbstractSimplicialComplex =
@@ -33514,11 +33526,73 @@ end
 
 end
 
-section
-
-open SimplicialSphereAnisotropicity
-
 namespace SimplicialSphereAnisotropicity
+
+/-!
+## Semantic sanity check
+
+The boundary complex of the `(n+1)`-dimensional crosspolytope is an explicit
+inhabitant of the public `IsSimplicialSphere` predicate.  This checks both its
+combinatorial-dimension and canonical-realization clauses, so the main
+theorem's sphere hypothesis is not vacuous.
+-/
+
+theorem crosspolytope_isSimplicialSphere (n : ℕ) :
+    IsSimplicialSphere (Topology.crosspolytope (n + 1)) n := by
+  let d := n + 1
+  have hdimension : HasDimension (Topology.crosspolytope d) n := by
+    constructor
+    · intro F hF
+      have hface := (Topology.mem_crosspolytope d F).mp hF
+      let chosen : Fin d → Fin (d + d) := fun i =>
+        if Topology.cpNeg d i ∈ F then Topology.cpNeg d i else Topology.cpPos d i
+      let G : Finset (Fin (d + d)) := Finset.univ.image chosen
+      have hFG : F ⊆ G := by
+        intro v hv
+        generalize hv' : (Topology.cpEquiv d).symm v = sv
+        cases sv with
+        | inl i =>
+            have hvi : v = Topology.cpPos d i := by
+              simpa [Topology.cpEquiv, Topology.cpPos] using
+                congrArg (Topology.cpEquiv d) hv'
+            subst v
+            have hneg : Topology.cpNeg d i ∉ F := fun hi => hface.2 i ⟨hv, hi⟩
+            apply Finset.mem_image.mpr
+            exact ⟨i, Finset.mem_univ i, by simp [chosen, hneg]⟩
+        | inr i =>
+            have hvi : v = Topology.cpNeg d i := by
+              simpa [Topology.cpEquiv, Topology.cpNeg] using
+                congrArg (Topology.cpEquiv d) hv'
+            subst v
+            apply Finset.mem_image.mpr
+            exact ⟨i, Finset.mem_univ i, by simp [chosen, hv]⟩
+      calc
+        F.card ≤ G.card := Finset.card_le_card hFG
+        _ ≤ (Finset.univ : Finset (Fin d)).card := Finset.card_image_le
+        _ = n + 1 := by simp [d]
+    · let F : Finset (Fin (d + d)) := Finset.univ.image (Topology.cpPos d)
+      have hposinj : Function.Injective (Topology.cpPos d) := by
+        intro i j hij
+        apply Fin.ext
+        simpa [Topology.cpPos] using congrArg Fin.val hij
+      refine ⟨F, ?_, ?_⟩
+      · apply (Topology.mem_crosspolytope d F).mpr
+        constructor
+        · simp [F, d]
+        · intro i hi
+          obtain ⟨j, -, hji⟩ := Finset.mem_image.mp hi.2
+          have hval := congrArg Fin.val hji
+          simp [Topology.cpPos, Topology.cpNeg] at hval
+          have hd : 0 < d := by simp [d]
+          omega
+      · rw [show F.card = (Finset.univ : Finset (Fin d)).card by
+            exact Finset.card_image_iff.mpr hposinj.injOn]
+        simp [d]
+  refine ⟨hdimension, ?_⟩
+  refine ⟨(Homeomorph.setCongr
+    (Topology.preGeom_toPre_eq_geometricRealization
+      (Topology.crosspolytope d))).symm |>.trans ?_⟩
+  simpa [d] using Topology.crossExactSphereHomeomorph d
 
 theorem characteristic_two_anisotropicity
     (k₁ : Type*) [Field k₁] [CharP k₁ 2]
@@ -33528,6 +33602,3 @@ theorem characteristic_two_anisotropicity
   exact Stress.sphere_genericallyAnisotropic k₁ hn D hD
 
 end SimplicialSphereAnisotropicity
-
-
-end
